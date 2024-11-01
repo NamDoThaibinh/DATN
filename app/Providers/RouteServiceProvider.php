@@ -18,23 +18,63 @@ class RouteServiceProvider extends ServiceProvider
      * @var string
      */
     public const HOME = '/home';
+    protected $namespace = 'App\\Http\\Controllers';
 
     /**
      * Define your route model bindings, pattern filters, and other route configuration.
      */
-    public function boot(): void
-    {
-        RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-        });
+   public function boot() {
+        //
 
-        $this->routes(function () {
-            Route::middleware('api')
-                ->prefix('api')
-                ->group(base_path('routes/api.php'));
+        parent::boot();
+    }
 
-            Route::middleware('web')
+    /**
+     * Define the routes for the application.
+     *
+     * @return void
+     */
+    public function map() {
+        $this->mapApiRoutes();
+
+        $this->mapWebRoutes();
+
+        $this->mapFERoutes();
+
+        $this->mapBERoutes();
+
+    }
+
+    /**
+     * Define the "web" routes for the application.
+     *
+     * These routes all receive session state, CSRF protection, etc.
+     *
+     * @return void
+     */
+    protected function mapWebRoutes() {
+        Route::middleware('web')
+                ->namespace($this->namespace)
                 ->group(base_path('routes/web.php'));
-        });
+    }
+
+    protected function mapApiRoutes() {
+        Route::prefix('api')
+                ->middleware('api')
+                ->namespace($this->namespace)
+                ->group(base_path('routes/api.php'));
+    }
+
+    protected function mapFERoutes() {
+        Route::middleware('web')
+                ->namespace($this->namespace)
+                ->group(base_path('routes/frontend.php'));
+    }
+
+    protected function mapBERoutes() {
+        Route::prefix('admin')
+                ->middleware('admin')
+                ->namespace($this->namespace)
+                ->group(base_path('routes/backend.php'));
     }
 }
